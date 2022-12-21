@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+
+group 'me.mrfunny.chatapp'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    shade
+    compileOnly.extendsFrom shade
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    shade 'org.apache.commons:commons-lang3:3.12.0'
+    shade 'com.corundumstudio.socketio:netty-socketio:1.7.22'
+    shade 'mysql:mysql-connector-java:8.0.15'
+}
+
+jar {
+    manifest.attributes["Main-Class"] = "me.mrfunny.chatapp.server.Main"
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)){
+            exclude 'META-INF', 'META-INF/**'
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
