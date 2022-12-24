@@ -12,6 +12,8 @@ import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static me.mrfunny.chatapp.api.util.StringUtil.isBadString;
+
 public class RegisterFrame extends Frame {
     private final PlaceholderTextField username = new PlaceholderTextField();
     private final PlaceholderTextField email = new PlaceholderTextField();
@@ -84,21 +86,40 @@ public class RegisterFrame extends Frame {
     private void handleRegister(ActionEvent event) {
         char[] passwordCharacters = repeatPassword.getPassword();
         if(!Arrays.equals(passwordCharacters, password.getPassword())) {
-            JOptionPane.showMessageDialog(Main.frameManager.getCurrentRawFrame(), "Passwords don't match", "Error while registring", JOptionPane.ERROR_MESSAGE);
+            error("Passwords don't match");
+            return;
+        }
+
+        String password = String.valueOf(passwordCharacters);
+        String email = this.email.getText();
+        String username = this.username.getText();
+
+        if(isBadString(password)) {
+            error("Password can't be empty");
+            return;
+        } else if(isBadString(email)) {
+            error("Email can't be empty");
+            return;
+        } else if(isBadString(username)) {
+            error("Username can't be empty");
             return;
         }
         this.registerButton.setEnabled(false);
-        String password = String.valueOf(passwordCharacters);
-        AccountData toRegister = new AccountData(email.getText(), username.getText(), password);
+
+        AccountData toRegister = new AccountData(email, username, password);
         Main.client.getSocket().register(toRegister).thenAccept(result -> {
             this.registerButton.setEnabled(true);
             if(!result.successful()) {
-                JOptionPane.showMessageDialog(Main.frameManager.getCurrentRawFrame(), result.message(), "Error while registring", JOptionPane.ERROR_MESSAGE);
+                error(result.message());
                 return;
             }
             Main.login(toRegister);
             Main.frameManager.changeFrame(new ChatFrame(toRegister.username()));
         });
+    }
+
+    private void error(String message) {
+        JOptionPane.showMessageDialog(Main.frameManager.getCurrentRawFrame(), message, "Error while registering", JOptionPane.ERROR_MESSAGE);
     }
 
     @Override

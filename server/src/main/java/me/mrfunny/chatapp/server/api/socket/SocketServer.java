@@ -30,6 +30,13 @@ public class SocketServer {
     private void handleLogin(SocketIOClient client, MultiTypeArgs data, AckRequest ackRequest) throws Exception {
         String email = data.get(0).toString();
         String password = data.get(1).toString();
+        if(isBadString(email)) {
+            ackRequest.sendAckData(false, "Empty email");
+            return;
+        } else if(isBadString(password)) {
+            ackRequest.sendAckData(false, "Empty password");
+            return;
+        }
         AccountData account = Main.server.getDb().validatePassword(email, password);
         if(account == null) {
             ackRequest.sendAckData(false, "Email doesn't exists");
@@ -50,6 +57,13 @@ public class SocketServer {
         String email = data.get(0).toString();
         String password = data.get(1).toString();
         String message = data.get(2).toString();
+        if(isBadString(message)) {
+            ackRequest.sendAckData(true, "Empty message");
+            return;
+        } else if(isBadString(email) || isBadString(password)) {
+            ackRequest.sendAckData(false, "Failed auth. Restart your app");
+            return;
+        }
         AccountData account = Main.server.getDb().validatePassword(email, password);
         if(account == null || account.username() == null) {
             ackRequest.sendAckData(false, "Invalid login data");
@@ -75,6 +89,10 @@ public class SocketServer {
         String email = data.get(0).toString();
         String username = data.get(1).toString();
         String password = data.get(2).toString();
+        if(isBadString(email) || isBadString(username) || isBadString(password)) {
+            ackSender.sendAckData(false, "One of the required fields is empty");
+            return;
+        }
         if(!Main.server.getDb().canCreateEmail(email)) {
             ackSender.sendAckData(false, "Email already exists");
             return;
@@ -86,6 +104,10 @@ public class SocketServer {
         }
         Main.server.getDb().saveUser(email, username, password);
         ackSender.sendAckData(true, "OK");
+    }
+
+    private boolean isBadString(String toCheck) {
+        return toCheck == null || toCheck.trim().equals("");
     }
 
     public SocketIOServer getIo() {

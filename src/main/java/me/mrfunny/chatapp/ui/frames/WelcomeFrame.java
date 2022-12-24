@@ -12,6 +12,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 
+import static me.mrfunny.chatapp.api.util.StringUtil.isBadString;
+
 public class WelcomeFrame extends Frame {
     private final PlaceholderTextField email = new PlaceholderTextField();
     private final PlaceholderPasswordField password = new PlaceholderPasswordField();
@@ -76,8 +78,18 @@ public class WelcomeFrame extends Frame {
     }
 
     private void handleLogin(ActionEvent event) {
+
+        String email = this.email.getText();
+        String password = String.valueOf(this.password.getPassword());
+        if(isBadString(email)) {
+            error("Email can't be empty");
+            return;
+        } else if(isBadString(password)) {
+            error("Password can't be empty");
+            return;
+        }
         this.loginButton.setEnabled(false);
-        AccountData account = new AccountData(email.getText(), null, String.valueOf(password.getPassword()));
+        AccountData account = new AccountData(email, null, password);
         Main.client.getSocket().login(account).thenAccept((data) -> {
             this.loginButton.setEnabled(true);
             if(!data.successful()) {
@@ -88,6 +100,10 @@ public class WelcomeFrame extends Frame {
             Main.login(account);
             Main.frameManager.changeFrame(new ChatFrame(account.username()));
         });
+    }
+
+    private void error(String message) {
+        JOptionPane.showMessageDialog(Main.frameManager.getCurrentRawFrame(), message, "Error while logging in", JOptionPane.ERROR_MESSAGE);
     }
 
     @Override
